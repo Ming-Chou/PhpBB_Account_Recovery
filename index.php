@@ -1,37 +1,37 @@
 <?php
-require('function.php');
+	require('function.php');
 	
 	if(isset($_POST["submit"])){
 		$email = ($_POST["email"]);
-		
-		$response = $_POST['g-recaptcha-response'];
+		//$response = $_POST['g-recaptcha-response'];
 		//if (!recaptcha_vertify($response))
 		//	$errRecaptcha = "<div class='alert alert-danger'>請驗證是否為機器人！</div>";
 				
-		if(!$_POST["email"] || !filter_var($_POST["email"], FILTER_VALIDATE_EMAIL))
+		if(!$_POST["email"] || !filter_var($_POST["email"], FILTER_VALIDATE_EMAIL)) {
 			$errEmail = "<div class='alert alert-danger'>電子郵件格式有誤！請重試一次！</div>";
-		
-		if( !$errRecaptcha && !$errEmail){
+		}
+		else{
 			connect_phpBB();
 			$sql = "select username from phpbb_users where user_email='" . $email . "'";
-			$result = mysql_query("$sql") or die('MySQL query error2');
+			$result = mysql_query($sql) or die('MySQL query error2');
 	
-			while ($row = mysql_fetch_array($result)){
-				$account = $row['username'];
-			}
-				
-			if($account != ""){
-				mail2user($account,$email);
-				if(!$Message)
+			if (mysql_num_rows($result)){
+				$row = mysql_fetch_row($result);
+				$to="$email";
+				$subject="東大論壇帳號救援";
+				$message="您的帳號為：" . $row[0];
+				if (mail($to,$subject,$message)){
 					$Message = "<div class='alert alert-success'>救援成功！已將帳號寄至您的信箱！</div>";
-				else
-					$Message = "<div class='alert alert-danger'>系統發生錯誤！請通知管理員！</div>"; 
+				}
+				else{
+					$Message = "<div class='alert alert-success'>信件發送失敗！</div>";
+				}
 			}
 			else{
 				$Message = "<div class='alert alert-danger'>查無此Email紀錄！</div>";	
 			}
-			
-		}					
+		}
+		echo $Message;
 	}
 ?>
 
@@ -100,15 +100,12 @@ require('function.php');
 		<div class="form-group">
 			<label for="email">Email:</label>
 			<input type="email" class="form-control input-lg" id="email" name="email" placeholder="mail@gmail.com" value="<?php echo htmlspecialchars($_POST['email']); ?>">
-			<?php echo "$Message$errEmail$errRecaptcha";?>
 			<br>
-			<!--<center><?php echo recaptcha_display(); ?></center> -->
 			<br>
 			<input id="submit" name="submit" type="submit" class="btn btn-default btn-lg btn-block" value="送出查詢">
 		</div>
 	</form>
 </div>
-
 
 </body>
 </html>
